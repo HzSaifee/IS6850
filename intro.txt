@@ -1,0 +1,4 @@
+Hi My name is Viraj.
+
+This is my Final project for IS-6850 - 008 Advanced SQL 
+I am going to work on the public dataset real-time air quality from the dataset repo of BigQuery.
