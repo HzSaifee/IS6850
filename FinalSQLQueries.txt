@@ -1,0 +1,117 @@
+			1.  
+			SELECT EXTRACT(YEAR FROM timestamp) as `Year`,
+            AVG(value) as `Average`,
+            latitude,
+            longitude
+		    FROM `bigquery-public-data.openaq.global_air_quality`
+	        WHERE unit = 'µg/m³'
+	        GROUP BY Year, 
+	        latitude,
+	        longitude
+
+
+            2.  
+            SELECT city,latitude,longitude,averaged_over_in_hours,
+            AVG(value) as `Average`
+            FROM `bigquery-public-data.openaq.global_air_quality`
+            WHERE unit = 'µg/m³'
+            GROUP BY latitude,city,longitude,averaged_over_in_hours   
+            ORDER BY Average DESC
+
+            3. Basic summary
+            SELECT
+            MAX(latitude) as `max_latitude`,
+            MIN(latitude) as `min_latitude`,
+            MAX(longitude) as `max_longitude`,
+            MIN(longitude) as `min_longitude`,
+            MAX(averaged_over_in_hours) AS max_average,
+            MAX(value) as max_value_pollutant,
+            MIN(value) as min_value_pollutant,
+            AVG(value) as avg_value_pollutant
+            FROM `bigquery-public-data.openaq.global_air_quality`
+            WHERE country = 'US' 
+
+            4. The top 15 locations with the highest concentrations of PM10 this month.
+
+			select *, rank() over(partition by country order by value desc)
+			FROM
+			  `bigquery-public-data.openaq.global_air_quality`
+			WHERE
+			  pollutant = "pm10"
+			  AND timestamp > "2017-04-01"
+			ORDER BY
+			  value DESC
+			LIMIT
+			  10
+
+
+			5. Current global picture of PM 10 concentration.  
+			  SELECT
+			  location,
+			  country,
+			  value,
+			  latitude,
+			  longitude
+			FROM
+			  `bigquery-public-data.openaq.global_air_quality`
+			WHERE
+			  pollutant = "pm10"
+
+
+
+			  6. The cities in the US who have improved its air quality (PM2.5) the most since 2010.
+
+			  SELECT
+			  aq.location,
+			  aq.city,
+			  epa.arithmetic_mean,
+			  aq.value,
+			  (epa.arithmetic_mean - aq.value) AS air_quality_difference,
+			  aq.timestamp,
+			  epa.state_code,
+			  epa.latitude,
+			  epa.longitude
+			FROM
+			  `bigquery-public-data.openaq.global_air_quality` AS aq
+			JOIN
+			  `bigquery-public-data.epa_historical_air_quality.air_quality_annual_summary` AS epa
+			ON
+			  ROUND(aq.latitude, 1) = ROUND(epa.latitude, 1)
+			  AND ROUND(aq.longitude, 1) = ROUND(epa.longitude, 1)
+			WHERE
+			  epa.units_of_measure = "Micrograms/cubic meter (LC)"
+			  AND epa.parameter_name = "Acceptable PM2.5 AQI & Speciation Mass"
+			  AND epa.year = 2010
+			  AND aq.pollutant = "pm25"
+			ORDER BY
+			  air_quality_difference DESC
+			LIMIT
+			  10
+
+
+			 7. Cities in India performing bad and better in terms of air quality index
+
+			
+			SELECT country,latitude,longitude,averaged_over_in_hours,
+            AVG(value) as `Average`
+            FROM `bigquery-public-data.openaq.global_air_quality`
+            WHERE unit = 'µg/m³'
+            GROUP BY latitude,country,longitude,averaged_over_in_hours   
+            ORDER BY Average
+
+            8. Sources for the data
+
+            SELECT 
+            DISTINCT source_name, 
+                     country
+            FROM `bigquery-public-data.openaq.global_air_quality`
+            ORDER BY source_name
+===============================================================
+            SELECT 
+            DISTINCT source_name,
+            COUNT(country) AS Country_Count
+            FROM `bigquery-public-data.openaq.global_air_quality`
+            GROUP BY source_name
+            HAVING Country_Count > 50
+            ORDER BY Country_Count DESC
+
